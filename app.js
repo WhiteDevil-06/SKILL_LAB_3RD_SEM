@@ -476,19 +476,45 @@
     updateCategoryFilter();
   }
 
-  function renderBudgetAlerts(monthFilter){
-    budgets.forEach(b=>{
-      if (b.scope === 'monthly') {
-        const totalForMonth = transactions.filter(t => { const d = new Date(t.date); const mm = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; return mm === (monthFilter || mm) && t.type === 'expense'; }).reduce((s,t)=>s + Number(t.amount), 0);
-        if (totalForMonth >= b.limit) showToast(`Monthly budget exceeded (${fmt(totalForMonth)} >= ${fmt(b.limit)})`, true);
-        else if (totalForMonth >= b.limit * 0.9) showToast(`Monthly spend near budget (${fmt(totalForMonth)} / ${fmt(b.limit)})`, false);
-      } else if (b.scope === 'category') {
-        const totalCat = transactions.filter(t => t.type === 'expense' && t.category === b.category).reduce((s,t)=>s + Number(t.amount), 0);
-        if (totalCat >= b.limit) showToast(`Budget exceeded for ${b.category} (${fmt(totalCat)} >= ${fmt(b.limit)})`, true);
-        else if (totalCat >= b.limit * 0.9) showToast(`${b.category} nearing budget (${fmt(totalCat)} / ${fmt(b.limit)})`, false);
+  function renderBudgetAlerts(){
+  // Determine the month filter (YYYY-MM) from dashboard filter if present
+  const dateFilterMonth = (typeof DOM !== 'undefined' && DOM.filterDate && DOM.filterDate.value) ? DOM.filterDate.value.slice(0,7) : null;
+
+  budgets.forEach(b => {
+    if (b.scope === 'monthly') {
+      // monthly budgets use stored b.month (YYYY-MM)
+      const monthKey = b.month || dateFilterMonth; // fallback if not set
+      // total expense for that month
+      const totalForMonth = transactions
+        .filter(t => t.type === 'expense' && `${t.date.slice(0,7)}` === (monthKey || ''))
+        .reduce((s, t) => s + Number(t.amount || 0), 0);
+
+      const alertKey = `monthly:${b.month || 'unknown'}:limit:${b.limit}`;
+
+      if (totalForMonth >= b.limit) {
+        // persistent alert when exceeded
+        showPersistentAlert(`Monthly budget exceeded for ${b.month || 'selected month'} — spent ${fmt(totalForMonth)} (limit ${fmt(b.limit)}).`, alertKey);
+      } else if (totalForMonth >= b.limit * 0.9) {
+        // transient near-limit toast
+        showToast(`Monthly spend near budget (${fmt(totalForMonth)} / ${fmt(b.limit)})`);
       }
-    });
-  }
+    } else if (b.scope === 'category') {
+      const totalCat = transactions
+        .filter(t => t.type === 'expense' && t.category === b.category)
+        .reduce((s, t) => s + Number(t.amount || 0), 0);
+
+      const alertKey = `category:${b.category}:limit:${b.limit}`;
+
+      if (totalCat >= b.limit) {
+        // persistent alert when exceeded for a category
+        showPersistentAlert(`Budget exceeded for category "${b.category}" — spent ${fmt(totalCat)} (limit ${fmt(b.limit)}).`, alertKey);
+      } else if (totalCat >= b.limit * 0.9) {
+        showToast(`${b.category} nearing budget (${fmt(totalCat)} / ${fmt(b.limit)})`);
+      }
+    }
+  });
+}
+
 
   // ----- charts (unchanged) -----
   function renderCharts(monthFilter){
@@ -585,6 +611,81 @@
     setTimeout(()=>{ node.style.opacity = '0.95' }, 20);
     setTimeout(()=>{ node.remove(); }, 5000);
   }
+
+// --- persistent modal alerts (stays until user clicks OK) ---
+const activePersistentAlerts = new Map(); // key -> DOM node
+
+function showPersistentAlert(message, key) {
+  // key: unique string identifying the alert so we don't create duplicates
+  if (!key) key = String(Date.now());
+  if (activePersistentAlerts.has(key)) return; // already shown
+
+  // overlay
+  const overlay = document.createElement('div');
+  overlay.style.position = 'fixed';
+  overlay.style.left = '0';
+  overlay.style.top = '0';
+  overlay.style.width = '100vw';
+  overlay.style.height = '100vh';
+  overlay.style.display = 'flex';
+  overlay.style.alignItems = 'center';
+  overlay.style.justifyContent = 'center';
+  overlay.style.background = 'rgba(0,0,0,0.35)';
+  overlay.style.zIndex = '99999';
+
+  // modal
+  const modal = document.createElement('div');
+  modal.style.maxWidth = '520px';
+  modal.style.width = '92%';
+  modal.style.background = '#fff';
+  modal.style.borderRadius = '12px';
+  modal.style.padding = '18px';
+  modal.style.boxShadow = '0 12px 40px rgba(2,6,23,0.25)';
+  modal.style.color = '#111827';
+  modal.style.fontFamily = 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial';
+
+  const title = document.createElement('div');
+  title.style.fontSize = '16px';
+  title.style.fontWeight = '700';
+  title.style.marginBottom = '8px';
+  title.textContent = 'Important budget alert';
+
+  const body = document.createElement('div');
+  body.style.fontSize = '14px';
+  body.style.marginBottom = '16px';
+  body.textContent = message;
+
+  const actions = document.createElement('div');
+  actions.style.display = 'flex';
+  actions.style.justifyContent = 'flex-end';
+  actions.style.gap = '8px';
+
+  const okBtn = document.createElement('button');
+  okBtn.textContent = 'OK';
+  okBtn.style.padding = '8px 12px';
+  okBtn.style.borderRadius = '8px';
+  okBtn.style.border = '0';
+  okBtn.style.background = '#111827';
+  okBtn.style.color = '#fff';
+  okBtn.style.fontWeight = '600';
+  okBtn.style.cursor = 'pointer';
+
+  // (optional) Add a "Snooze" / "Dismiss" if you want — currently only OK removes
+  okBtn.addEventListener('click', () => {
+    overlay.remove();
+    activePersistentAlerts.delete(key);
+  });
+
+  actions.appendChild(okBtn);
+  modal.appendChild(title);
+  modal.appendChild(body);
+  modal.appendChild(actions);
+  overlay.appendChild(modal);
+
+  document.body.appendChild(overlay);
+  activePersistentAlerts.set(key, overlay);
+}
+
 
   // ----- Auth helpers (prompt-based) -----
   function promptSignUp(){ const email = prompt('Sign up — enter email:'); if (!email) return; const password = prompt('Choose a password (min 6 chars):'); if (!password) return; firebase.auth().createUserWithEmailAndPassword(email, password).then(cred => { showToast('Sign up successful — logged in'); }).catch(err => { console.error(err); showToast('Sign up error: ' + err.message, true); }); }

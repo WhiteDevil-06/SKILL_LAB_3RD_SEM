@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Login — Budget Planner</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main class="container" style="max-width:520px">
+    <div class="card">
+      <h2>Sign In</h2>
+      <form id="loginForm">
+        <label>Email<input id="email" type="email" required></label>
+        <label>Password<input id="password" type="password" required></label>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+          <button class="btn btn-primary" type="submit">Sign In</button>
+          <a class="btn btn-ghost" href="signup.html">Sign Up</a>
+        </div>
+        <hr style="margin:12px 0">
+        <button id="googleSignIn" class="btn" type="button">Sign in with Google</button>
+      </form>
+      <p class="muted" style="margin-top:12px">After sign in you'll be redirected to the planner with realtime sync.</p>
+    </div>
+  </main>
+
+  <script>
+    // paste same Firebase config as in app.js
+    const FIREBASE_CONFIG = { /* paste your config here */ };
+    if (FIREBASE_CONFIG && FIREBASE_CONFIG.apiKey) firebase.initializeApp(FIREBASE_CONFIG);
+    const auth = firebase.auth();
+
+    document.getElementById('loginForm').addEventListener('submit', (e)=>{
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const pw = document.getElementById('password').value;
+      auth.signInWithEmailAndPassword(email, pw).then(()=>{ window.location.href = 'planner.html'; }).catch(err=>{ alert('Sign in error: ' + err.message); });
+    });
+
+    document.getElementById('googleSignIn').addEventListener('click', ()=>{
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider).then(()=> window.location.href='planner.html').catch(err=> alert('Google sign in error: ' + err.message));
+    });
+  </script>
+</body>
+</html>
