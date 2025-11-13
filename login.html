@@ -6,7 +6,7 @@
   <title>Login — Budget Planner</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <main class="container" style="max-width:520px">
@@ -16,7 +16,7 @@
         <label>Email<input id="email" type="email" required></label>
         <label>Password<input id="password" type="password" required></label>
         <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
-          <button class="btn btn-primary" type="submit">Sign In</button>
+          <button class="btn btn-primary" type="submit" onclick="firebaseAuth.signInWithGooglePopup()">Sign In</button>
           <a class="btn btn-ghost" href="signup.html">Sign Up</a>
         </div>
         <hr style="margin:12px 0">

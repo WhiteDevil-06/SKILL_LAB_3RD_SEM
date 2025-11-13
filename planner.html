@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Personal Budget Planner — MVP (Firestore)</title>
-
+  <link rel="shortcut icon" href="accounts.png" type="image/x-icon">
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -18,22 +18,31 @@
 </head>
 <body>
   <header>
-    <div class="brand">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden>
+  <div class="brand">
+    <img src="monitor.png" width="28" height="28" viewBox="0 0 24 24" fill="none" color="white" >
+      <!-- <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden>
         <rect width="24" height="24" rx="6" fill="#eef2ff"/>
         <path d="M7 12h10M7 8h10M7 16h6" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round"/>
-      </svg>
+      </svg> -->
       Personal Budget Planner
-    </div>
+  </div>
 
-    <!-- Auth controls -->
-    <div style="margin-left:auto; display:flex; gap:8px; align-items:center; padding-right:16px">
+   <div style="margin-left:auto; display:flex; gap:8px; align-items:center; padding-right:16px">
       <div id="userEmail" class="muted" style="font-size:0.95rem;"></div>
-      <button id="authSignUp" class="btn btn-ghost" style="font-size:0.9rem"><a href="signup.html">Sign Up</a></button>
-      <button id="authSignIn" class="btn btn-ghost" style="font-size:0.9rem"><a href="login.html">Sign In</a></button>
-      <button id="authSignOut" class="btn" style="display:none; font-size:0.9rem">Sign Out</button>
-    </div>
+      <button id="themeToggle" class="btn btn-ghost" style="font-size:0.9rem">
+  🌙 Dark
+</button>
+<!-- add near header right / controls -->
+<button id="undoBtn" class="btn btn-ghost" title="Undo (Ctrl+Z)">↶ Undo</button>
+<button id="redoBtn" class="btn btn-ghost" title="Redo (Ctrl+Y)">↷ Redo</button>
+
+
+  <div class="header-right">
+      <div id="userEmail" class="muted"></div>
+      <!-- <button id="themeToggle" class="theme-btn">🌙</button> -->
+  </div>
   </header>
+
 
   <main class="container">
     <div class="grid">
@@ -71,7 +80,7 @@
 
               <label>
                 <div class="muted">Amount</div>
-                <input id="amount" type="number" step="0.01" required placeholder="e.g., 450.00">
+                <input id="amount" type="number" step="0.01" required placeholder="e.g., 369.00">
               </label>
 
               <div class="form-row">
@@ -117,7 +126,7 @@
               <label>
                 <div class="muted">Scope</div>
                 <select id="budgetScope">
-                  <option value="monthly">Monthly</option>
+                  <option value="monthly" style="width:60px">Monthly</option>
                   <option value="category">Category</option>
                 </select>
               </label>
@@ -243,9 +252,16 @@
       </div>
     </div>
 
+
+
     <footer class="card">
-      Built as an MVP — Firestore sync enabled when signed in. Data is saved locally if not signed in.
+      Built as an MVP — Data is saved locally ! <br> <p>Copyright &copy; 2025 Personal Budget Planner Website. All rights reserved.</p>
     </footer>
+
+
+
+
+
   </main>
 
   <!-- Toast container -->
